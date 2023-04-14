@@ -5,3 +5,4 @@
 # so that we can measure the scalability of the system, and we want to be able
 # to be able to change which endpoint we make requests to so that we can 
 # measure latency of different types of services.
+# This app should manage a DEALER socket which it connects to.
