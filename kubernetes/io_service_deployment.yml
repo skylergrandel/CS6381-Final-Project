@@ -1,0 +1,41 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: io-svc-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: io_svc_label
+  template:
+    metadata:
+      labels:
+        app: io_svc_label
+    spec:
+      containers:
+        - name: io-svc-process
+          image: # TODO service Dockerfile
+          ports:
+            - containerPort: 5555
+          env:
+            - name: NAME
+              value: io_svc_server
+            - name: PORT
+              value: 5555
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: io-svc-service
+  labels:
+    name: io_svc_label
+spec:
+  ports:
+    - port: 5555
+      targetPort: 5555
+      nodePort: 30001
+      name: io-svc-port
+  selector:
+    app: io_svc_label
+  type: NodePort

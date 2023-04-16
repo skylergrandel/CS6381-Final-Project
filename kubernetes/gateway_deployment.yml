@@ -1,0 +1,47 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: gateway-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway_label
+  template:
+    metadata:
+      labels:
+        app: gateway_label
+    spec:
+      containers:
+        - name: gateway-process
+          image: TODO IMAGE FOR GATEWAY
+          ports:
+            - containerPort: 5555
+          env:
+            - name: NAME
+              value: gateway
+            - name: PORT
+              value: 5555
+            - name: BASIC_SVC_ADDR
+              value: basic-svc-service:5555
+            - name: IO_SVC_ADDR
+              value: io-svc-service:5555
+            - name: CPU_SVC_ADDR
+              value: cpu-svc-service:5555
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-service
+  labels:
+    name: gateway_label
+spec:
+  ports:
+    - port: 5555
+      targetPort: 5555
+      nodePort: 30000
+      name: gateway-port
+  selector:
+    app: gateway_label
+  type: NodePort
