@@ -29,7 +29,7 @@ class Gateway():
     self.router = context.socket (zmq.ROUTER)
     self.poller.register (self.router, zmq.POLLIN) 
     bind_string = "tcp://*:" + str(self.port)
-    self.rout.bind (bind_string)
+    self.router.bind (bind_string)
 
     # Set up dealer requests to connect to microservices
     self.basic_svc_dealer = context.socket (zmq.DEALER)
@@ -51,22 +51,22 @@ class Gateway():
       events = dict (self.poller.poll (timeout=None))
       
       # Received a request from a client
-      if self.rout in events:
+      if self.router in events:
         self.handle_request()
 
       # If received something on any of the microservices dealers, then 
       # it is a response to a request we sent it earlier. Get the 
       # frames and send them back to whoever sent them
       elif self.basic_svc_dealer in events:
-        framesRcvd = self.basic_svc_dealer.receive_multipart()
+        framesRcvd = self.basic_svc_dealer.recv_multipart()
         self.router.send_multipart(framesRcvd)
 
       elif self.io_svc_dealer in events:
-        framesRcvd = self.io_svc_dealer.receive_multipart()
+        framesRcvd = self.io_svc_dealer.recv_multipart()
         self.router.send_multipart(framesRcvd)
 
       elif self.cpu_svc_dealer in events:
-        framesRcvd = self.cpu_svc_dealer.receive_multipart()
+        framesRcvd = self.cpu_svc_dealer.recv_multipart()
         self.router.send_multipart(framesRcvd)
 
       else:
@@ -74,7 +74,7 @@ class Gateway():
         
 
   def handle_request(self):
-    framesRcvd = self.router.receive_multipart()
+    framesRcvd = self.router.recv_multipart()
     message = framesRcvd[-1]
 
     # Forward messages appropriately

@@ -21,11 +21,9 @@ class Service():
     self.port = None
     self.poller = None
     self.rout = None
-    self.deal = None
     
   def configure(self,args):
     self.name = args.name
-    self.ret_addr = args.ret
     self.port = args.port
     
     context = zmq.Context()
@@ -39,9 +37,6 @@ class Service():
     bind_string = "tcp://*:" + str(self.port)
     self.rout.bind (bind_string)
     
-    connect_string = "tcp://" + self.ret_addr
-    self.deal.connect(connect_string)
-    
   def driver(self):
     print("Begin event loop")
     while True:
@@ -54,18 +49,19 @@ class Service():
         raise Exception ("Unknown event after poll")
         
   def handle_event(self):
-    message = self.rout.recv_multipart()[1]
+    framesRcvd = self.rout.recv_multipart()
+    message = framesRcvd[-1]
     if message == b'basic':
       print("Recieved basic call")
-      self.deal.send(message)
+      self.rout.send_multipart(framesRcvd)
     elif message == b'cpu':
       print("Recieved cpu call")
       CPU()
-      self.deal.send(message)
+      self.rout.send_multipart(framesRcvd)
     elif message == b'io':
       print("Recieved io call")
       IO()
-      self.deal.send(message)
+      self.rout.send_multipart(framesRcvd)
 
 def parseCmdLineArgs ():
   # instantiate a ArgumentParser object
@@ -76,8 +72,6 @@ def parseCmdLineArgs ():
   parser.add_argument ("-n", "--name", default="server", help="Some name assigned to us. Keep it unique.")
 
   parser.add_argument ("-p", "--port", type=int, default=5555, help="Port number, default=5555")
-  
-  parser.add_argument ("-r", "--ret", default="localhost:5556", help="Return addr/port combination. Default: localhost:5556")
   
   return parser.parse_args()
 

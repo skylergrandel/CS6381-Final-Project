@@ -1,0 +1,4 @@
+Send the request
+Begin event loop to check for the response
+Results for experiment 'exp_svc3_client3': cpu 0.2809286117553711
+Termination of the program

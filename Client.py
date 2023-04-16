@@ -25,13 +25,13 @@ class Client():
     self.poller = zmq.Poller ()
     self.poller.register (self.dealer, zmq.POLLIN) 
     connect_string = "tcp://" + args.server
-    self.deal.connect(connect_string)
+    self.dealer.connect(connect_string)
     
   
     
   def driver(self):
     print("Send the request")
-    message_to_send = [bytes(args.type_of_message)]
+    message_to_send = [bytes(args.type_of_message, 'utf-8')]
     self.dealer.send_multipart(message_to_send)
 
     # Record the timestamp when the request was sent
