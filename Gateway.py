@@ -12,3 +12,104 @@
 # since it's possible that the ROUTER could handle both) for communication with the microservices,
 # which it connects to. This should not wait for a response from the microservice. Instead,
 # the microservice will return the result back to the client directly.
+
+
+import zmq
+import argparse # for argument parsing
+
+class Gateway():
+  
+  def __init__(self, args):
+    self.name = args.name
+    self.port = args.port
+
+    # Set up a router socket to receive requests
+    context = zmq.Context()
+    self.poller = zmq.Poller ()
+    self.router = context.socket (zmq.ROUTER)
+    self.poller.register (self.router, zmq.POLLIN) 
+    bind_string = "tcp://*:" + str(self.port)
+    self.router.bind (bind_string)
+
+    # Set up dealer requests to connect to microservices
+    self.basic_svc_dealer = context.socket (zmq.DEALER)
+    self.io_svc_dealer = context.socket (zmq.DEALER)
+    self.cpu_svc_dealer = context.socket (zmq.DEALER)
+
+    self.poller.register (self.basic_svc_dealer, zmq.POLLIN) 
+    self.poller.register (self.io_svc_dealer, zmq.POLLIN) 
+    self.poller.register (self.cpu_svc_dealer, zmq.POLLIN) 
+
+    self.basic_svc_dealer.connect("tcp://" + args.basic_svc_addr)
+    self.io_svc_dealer.connect("tcp://" + args.io_svc_addr)
+    self.cpu_svc_dealer.connect("tcp://" + args.cpu_svc_addr)
+
+    
+  def driver(self):
+    print("Begin event loop")
+    while True:
+      events = dict (self.poller.poll (timeout=None))
+      
+      # Received a request from a client
+      if self.router in events:
+        self.handle_request()
+
+      # If received something on any of the microservices dealers, then 
+      # it is a response to a request we sent it earlier. Get the 
+      # frames and send them back to whoever sent them
+      elif self.basic_svc_dealer in events:
+        framesRcvd = self.basic_svc_dealer.recv_multipart()
+        self.router.send_multipart(framesRcvd)
+
+      elif self.io_svc_dealer in events:
+        framesRcvd = self.io_svc_dealer.recv_multipart()
+        self.router.send_multipart(framesRcvd)
+
+      elif self.cpu_svc_dealer in events:
+        framesRcvd = self.cpu_svc_dealer.recv_multipart()
+        self.router.send_multipart(framesRcvd)
+
+      else:
+        raise Exception ("Unknown event after poll")
+        
+
+  def handle_request(self):
+    framesRcvd = self.router.recv_multipart()
+    message = framesRcvd[-1]
+
+    # Forward messages appropriately
+    if message == b'basic':
+      print("Recieved basic call")
+      self.basic_svc_dealer.send_multipart(framesRcvd)
+    elif message == b'cpu':
+      print("Recieved cpu call")
+      self.cpu_svc_dealer.send_multipart(framesRcvd)
+    elif message == b'io':
+      print("Recieved io call")
+      self.io_svc_dealer.send_multipart(framesRcvd)
+
+
+def parseCmdLineArgs ():
+  # instantiate a ArgumentParser object
+  parser = argparse.ArgumentParser (description="Service Application")
+  
+  parser.add_argument ("-n", "--name", default="gateway", help="Some name assigned to us. Keep it unique.")
+
+  parser.add_argument ("-p", "--port", type=int, default=5555, help="Port on which we are rnning, default=5555")
+  
+  parser.add_argument ("-b", "--basic_svc_addr", default="localhost:5557", help="IP:port of basic microservice (echo)")
+  parser.add_argument ("-i", "--io_svc_addr", default="localhost:5558", help="IP:port of IO microservice")
+  parser.add_argument ("-c", "--cpu_svc_addr", default="localhost:5559", help="IP:port of CPU microservice")
+  
+  return parser.parse_args()
+
+
+
+if __name__ == "__main__":
+  args = parseCmdLineArgs ()
+
+  # Create and configure Gateway object
+  gateway_app = Gateway(args)
+
+  # Run the gateway
+  gateway_app.driver ()
