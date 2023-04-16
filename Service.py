@@ -10,73 +10,79 @@
 # This MW should manage a ROUTER socket for consistency, which it binds to.
 
 import zmq
-import argparse # for argument parsing
+import argparse  # for argument parsing
 from Functions import CPU, IO
 
+
 class Service():
-  
-  def __init__(self):
-    self.name = None
-    self.ret_addr = None
-    self.port = None
-    self.poller = None
-    self.rout = None
-    
-  def configure(self,args):
-    self.name = args.name
-    self.port = args.port
-    
-    context = zmq.Context()
-    self.poller = zmq.Poller ()
-    self.rout = context.socket (zmq.ROUTER)
-    self.deal = context.socket (zmq.DEALER)
-    
-    # dealer will never receive anything, so there is no need to register it with the poller.
-    self.poller.register (self.rout, zmq.POLLIN) 
-    
-    bind_string = "tcp://*:" + str(self.port)
-    self.rout.bind (bind_string)
-    
-  def driver(self):
-    print("Begin event loop")
-    while True:
-      events = dict (self.poller.poll (timeout=None))
-      
-      if self.rout in events:
-        self.handle_event()
 
-      else:
-        raise Exception ("Unknown event after poll")
-        
-  def handle_event(self):
-    framesRcvd = self.rout.recv_multipart()
-    message = framesRcvd[-1]
-    if message == b'basic':
-      print("Recieved basic call")
-      self.rout.send_multipart(framesRcvd)
-    elif message == b'cpu':
-      print("Recieved cpu call")
-      CPU()
-      self.rout.send_multipart(framesRcvd)
-    elif message == b'io':
-      print("Recieved io call")
-      IO()
-      self.rout.send_multipart(framesRcvd)
+    def __init__(self):
+        self.name = None
+        self.ret_addr = None
+        self.port = None
+        self.poller = None
+        self.rout = None
 
-def parseCmdLineArgs ():
-  # instantiate a ArgumentParser object
-  parser = argparse.ArgumentParser (description="Service Application")
-  
-  #parser.add_argument ("-a", "--addr", default="localhost", help="IP addr to advertise (default: localhost)")
-  
-  parser.add_argument ("-n", "--name", default="server", help="Some name assigned to us. Keep it unique.")
+    def configure(self, args):
+        self.name = args.name
+        self.port = args.port
 
-  parser.add_argument ("-p", "--port", type=int, default=5555, help="Port number, default=5555")
-  
-  return parser.parse_args()
+        context = zmq.Context()
+        self.poller = zmq.Poller()
+        self.rout = context.socket(zmq.ROUTER)
+        self.deal = context.socket(zmq.DEALER)
+
+        # dealer will never receive anything, so there is no need to register it with the poller.
+        self.poller.register(self.rout, zmq.POLLIN)
+
+        bind_string = "tcp://*:" + str(self.port)
+        self.rout.bind(bind_string)
+
+    def driver(self):
+        print("Begin event loop")
+        while True:
+            events = dict(self.poller.poll(timeout=None))
+
+            if self.rout in events:
+                self.handle_event()
+
+            else:
+                raise Exception("Unknown event after poll")
+
+    def handle_event(self):
+        framesRcvd = self.rout.recv_multipart()
+        message = framesRcvd[-1]
+        if message == b'basic':
+            print("Recieved basic call")
+            self.rout.send_multipart(framesRcvd)
+        elif message == b'cpu':
+            print("Recieved cpu call")
+            CPU()
+            self.rout.send_multipart(framesRcvd)
+        elif message == b'io':
+            print("Recieved io call")
+            IO()
+            self.rout.send_multipart(framesRcvd)
+
+
+def parseCmdLineArgs():
+    # instantiate a ArgumentParser object
+    parser = argparse.ArgumentParser(description="Service Application")
+
+    # parser.add_argument ("-a", "--addr", default="localhost", help="IP addr to advertise (default: localhost)")
+
+    parser.add_argument("-n", "--name", default="server",
+                        help="Some name assigned to us. Keep it unique.")
+
+    parser.add_argument("-p", "--port", type=int,
+                        default=5555, help="Port number, default=5555")
+
+    return parser.parse_args()
+
 
 if __name__ == "__main__":
-  args = parseCmdLineArgs ()
-  service_app = Service()
-  service_app.configure (args)
-  service_app.driver ()
+    print("Starting Service")
+    args = parseCmdLineArgs()
+    service_app = Service()
+    service_app.configure(args)
+    service_app.driver()
