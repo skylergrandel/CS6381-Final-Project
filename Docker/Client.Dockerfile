@@ -14,8 +14,8 @@ ENV EXPERIMENT_NAME=Experiment
 ENV NAME=Client
 
 # Install any needed packages specified in requirements.txt (if applicable)
-# COPY requirements.txt /app
-# RUN pip install --trusted-host pypi.python.org -r requirements.txt
+COPY requirements.txt /app
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
 
 # Define the entry point to run the script
 ENTRYPOINT ["python", "Client.py", "--name", "${NAME}", "--server", "${SERVER_ADDRESS}", "--experiment_name", "${EXPERIMENT_NAME}", "--type_of_message", "${TYPE_OF_MESSAGE}"]

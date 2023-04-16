@@ -15,8 +15,8 @@ ENV IO_SVC_ADDR=localhost:5558
 ENV CPU_SVC_ADDR=localhost:5559
 
 # Install any needed packages specified in requirements.txt (if applicable)
-# COPY requirements.txt /app
-# RUN pip install --trusted-host pypi.python.org -r requirements.txt
+COPY requirements.txt /app
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
 
 # Define the entry point to run the script
 ENTRYPOINT ["python", "Gateway.py", "--name", "${NAME}", "--port", "${PORT}", "--basic_svc_addr", "${BASIC_SVC_ADDR}", "--io_svc_addr", "${IO_SVC_ADDR}", "--cpu_svc_addr", "${CPU_SVC_ADDR}"]

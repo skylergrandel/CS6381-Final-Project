@@ -13,8 +13,8 @@ ENV NAME=server
 ENV PORT=5555
 
 # Install any needed packages specified in requirements.txt (if applicable)
-# COPY requirements.txt /app
-# RUN pip install --trusted-host pypi.python.org -r requirements.txt
+COPY requirements.txt /app
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
 
 # Define the entry point to run the script
 ENTRYPOINT ["python", "Service.py", "--name", "${NAME}", "--port", "${PORT}"]
