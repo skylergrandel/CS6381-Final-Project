@@ -10,14 +10,18 @@
 import zmq
 import argparse # for argument parsing
 import time
+from statistics import mean
+import atexit
 
 class Client():
   
   # Initialize and configure the object
   def __init__(self, args):
     self.name = args.name
+    self.exp_finished = False
     self.type_of_message = args.type_of_message
     self.experiment_name = args.experiment_name
+    self.latencies = []
 
     # we only need a dealer to send requests and receive responses to them
     context = zmq.Context()
@@ -30,15 +34,15 @@ class Client():
   
     
   def driver(self):
-    print("Send the request")
-    message_to_send = [bytes(args.type_of_message, 'utf-8')]
-    self.dealer.send_multipart(message_to_send)
-
-    # Record the timestamp when the request was sent
-    timestamp_sent = time.time()
-
-    print("Begin event loop to check for the response")
+    print("Begin event loop - {}".format(self.name))
     while True:
+      #print("Send the request")
+      message_to_send = [bytes(args.type_of_message, 'utf-8')]
+      self.dealer.send_multipart(message_to_send)
+
+      # Record the timestamp when the request was sent
+      timestamp_sent = time.time()
+      
       events = dict (self.poller.poll (timeout=None))
       
       if self.dealer in events:
@@ -48,16 +52,29 @@ class Client():
         latency = timestamp_received_response - timestamp_sent
         self.handle_latency_data(latency)
 
-        # No tasks left, so we terminate the program
-        break
 
       else:
         raise Exception ("Unknown event after poll")
       
 
   def handle_latency_data(self, latency):
-    # TODO saving the data to a file or into a database
-    print(f"Results for experiment \'{self.experiment_name}\': {self.type_of_message} {latency}")
+    #print(f"Results for experiment \'{self.experiment_name}\': {self.type_of_message} ; {latency}")
+    if not self.exp_finished:
+      self.latencies.append(latency)
+    else:
+      return
+    
+    '''
+    if len(self.latencies)>100:
+      self.latencies.pop(0)
+    '''
+      
+    if (len(self.latencies) == 60 and self.type_of_message != 'basic') or (len(self.latencies) == 60 and self.type_of_message == 'basic'):
+      print("Printing results!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+      self.exp_finished = True
+      with open('exp/'+self.experiment_name +':'+ self.type_of_message+".txt", 'a') as fi:
+        fi.write(str(mean(self.latencies[-50:])) + '\n')
+    
     
 
 
