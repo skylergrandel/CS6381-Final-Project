@@ -69,7 +69,7 @@ class Client():
       self.latencies.pop(0)
     '''
       
-    if (len(self.latencies) == 60 and self.type_of_message != 'basic') or (len(self.latencies) == 60 and self.type_of_message == 'basic'):
+    if (len(self.latencies) == 100 and self.type_of_message != 'basic') or (len(self.latencies) == 100 and self.type_of_message == 'basic'):
       print("Printing results!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
       self.exp_finished = True
       with open('exp/'+self.experiment_name +':'+ self.type_of_message+".txt", 'a') as fi:
