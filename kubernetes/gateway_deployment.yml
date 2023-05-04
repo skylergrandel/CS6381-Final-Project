@@ -14,14 +14,14 @@ spec:
     spec:
       containers:
         - name: gateway-process
-          image: TODO IMAGE FOR GATEWAY
+          image: saydus/ds-final-gateway:latest
           ports:
             - containerPort: 5555
           env:
             - name: NAME
               value: gateway
             - name: PORT
-              value: 5555
+              value: "5555"
             - name: BASIC_SVC_ADDR
               value: basic-svc-service:5555
             - name: IO_SVC_ADDR

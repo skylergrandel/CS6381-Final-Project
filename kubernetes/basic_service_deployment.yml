@@ -14,14 +14,21 @@ spec:
     spec:
       containers:
         - name: basic-svc-process
-          image: # TODO service Dockerfile
+          image: saydus/ds-final-service:latest
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
           ports:
             - containerPort: 5555
           env:
             - name: NAME
               value: basic_svc_server
             - name: PORT
-              value: 5555
+              value: "5555"
 ---
 
 apiVersion: v1
@@ -34,8 +41,7 @@ spec:
   ports:
     - port: 5555
       targetPort: 5555
-      nodePort: 30002
       name: basic-svc-port
   selector:
     app: basic_svc_label
-  type: NodePort
+  type: LoadBalancer

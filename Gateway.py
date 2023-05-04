@@ -40,9 +40,9 @@ class Gateway():
     self.poller.register (self.io_svc_dealer, zmq.POLLIN) 
     self.poller.register (self.cpu_svc_dealer, zmq.POLLIN) 
 
-    self.basic_svc_dealer.connect("tcp://" + args.basic_svc_addr)
-    self.io_svc_dealer.connect("tcp://" + args.io_svc_addr)
-    self.cpu_svc_dealer.connect("tcp://" + args.cpu_svc_addr)
+    #self.basic_svc_dealer.connect("tcp://" + args.basic_svc_addr)
+    #self.io_svc_dealer.connect("tcp://" + args.io_svc_addr)
+    #self.cpu_svc_dealer.connect("tcp://" + args.cpu_svc_addr)
 
     
   def driver(self):
@@ -80,13 +80,19 @@ class Gateway():
     # Forward messages appropriately
     if message == b'basic':
       print("Recieved basic call")
+      self.basic_svc_dealer.connect("tcp://" + args.basic_svc_addr)
       self.basic_svc_dealer.send_multipart(framesRcvd)
+      self.basic_svc_dealer.disconnect("tcp://" + args.basic_svc_addr)
     elif message == b'cpu':
       print("Recieved cpu call")
+      self.cpu_svc_dealer.connect("tcp://" + args.cpu_svc_addr)
       self.cpu_svc_dealer.send_multipart(framesRcvd)
+      self.cpu_svc_dealer.disconnect("tcp://" + args.cpu_svc_addr)
     elif message == b'io':
       print("Recieved io call")
+      self.io_svc_dealer.connect("tcp://" + args.io_svc_addr)
       self.io_svc_dealer.send_multipart(framesRcvd)
+      self.io_svc_dealer.disconnect("tcp://" + args.io_svc_addr)
 
 
 def parseCmdLineArgs ():

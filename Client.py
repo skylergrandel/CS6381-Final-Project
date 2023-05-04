@@ -50,8 +50,10 @@ class Client():
         timestamp_received_response = time.time()
 
         latency = timestamp_received_response - timestamp_sent
-        self.handle_latency_data(latency)
+        is_finished = self.handle_latency_data(latency)
 
+        if(is_finished):
+          break
 
       else:
         raise Exception ("Unknown event after poll")
@@ -62,7 +64,7 @@ class Client():
     if not self.exp_finished:
       self.latencies.append(latency)
     else:
-      return
+      return self.exp_finished
     
     '''
     if len(self.latencies)>100:
@@ -72,8 +74,10 @@ class Client():
     if (len(self.latencies) == 100 and self.type_of_message != 'basic') or (len(self.latencies) == 100 and self.type_of_message == 'basic'):
       print("Printing results!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
       self.exp_finished = True
-      with open('exp/'+self.experiment_name +':'+ self.type_of_message+".txt", 'a') as fi:
+      with open('exp_cloud/'+self.experiment_name +':'+ self.type_of_message+".txt", 'a') as fi:
         fi.write(str(mean(self.latencies[-50:])) + '\n')
+
+    return self.exp_finished
     
     
 
